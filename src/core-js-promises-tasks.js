@@ -56,9 +56,13 @@ function getPromiseResult(source) {
  * [Promise.reject(1), Promise.reject(2), Promise.reject(3)]    => Promise rejected
  */
 function getFirstResolvedPromiseResult(promises) {
-  return Promise.race(promises)
-    .then((result) => result)
-    .catch('Promise rejected');
+  return Promise.allSettled(promises).then((results) => {
+    const resolvedPromise = results.find((res) => res.status === 'fulfilled');
+    if (resolvedPromise) {
+      return resolvedPromise.value;
+    }
+    throw new Error('All promises were rejected');
+  });
 }
 
 /**
@@ -80,8 +84,12 @@ function getFirstResolvedPromiseResult(promises) {
  * [promise3, promise6, promise2] => Promise rejected with 2
  * [promise3, promise4, promise6] => Promise rejected with 6
  */
-function getFirstPromiseResult(/* promises */) {
-  throw new Error('Not implemented');
+function getFirstPromiseResult(promises) {
+  return Promise.race(promises)
+    .then((result) => result)
+    .catch((error) => {
+      throw error;
+    });
 }
 
 /**
